@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang=en>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+  
+  
+    <meta name="keywords" content="Vue,"/>
+  
+  
+  <meta name="Description" content="当你的才华还撑不起你的野心时，你就应该静下心来学习。"/>
+  
+  
+  	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.0.0" />
+  
+  
+  <link rel="stylesheet" href="/lib/semantic/semantic.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+  <link rel="stylesheet" href="/lib/highlight/theme/github-gist.min.css">
+  
+  
+  <title>详解 Vue 2.4.0 带来的 4 个重大变化 | Gongph&#39;s Blog</title>
+  
+  </head>
+  <body>
+    <!-- header -->
+    <header class="header--fixed" id="header">
+  <div class="ui text container">
+  	<div class="ui text menu">
+  	  <div class="header item">
+  	    
+  	      <img src="/images/logo.jpg" class="ui circular image" width="38" height="38"/>
+  	    
+  	    <a href="/" class="item">Gongph&#39;s Blog</a>
+  	  </div>
+  	  <div class="right menu">
+  	    <div class="item">
+  	    	
+  	    	  <a href="/" class="item">INDEX</a>
+  	    	
+  	    	  <a href="/archives" class="item">ARCHIVE</a>
+  	    	
+  	    	  <a href="/tags" class="item">TAGS</a>
+  	    	
+  	    	  <a href="/about" class="item">ABOUT</a>
+  	    	
+  	    </div>
+  	  </div>
+  	</div>
+  </div>
+</header>
+    
+    <section class="content-wrap">
+      <!-- 文章详情 -->
+  <div class="article-detail">
+    <div class="ui text container">
+      
+      <div class="title">
+        <h1 class="ui header">详解 Vue 2.4.0 带来的 4 个重大变化</h1>
+      </div>
+      <div class="author-info">
+      	<div class="ui middle aligned list">
+        <div class="item">
+          <img src="https://avatars3.githubusercontent.com/u/17714338" alt="gongph" class="ui image avatar circuler" />
+          <div class="content">
+            <span>
+            	<span class="name">gongph</span>
+              <span class="bull"></span>
+              <span class="date">2017-07-27</span>
+            </span>
+          </div>
+        </div>
+      </div>
+      </div>
+      <div class="body">
+        <p>实践解决方案是简单的，但思考的过程才是值得我们探索的。本周 Vue.js 发布了有着丰富新特性和更加优化的 2.4.0 版本。在这篇文章中，我将跟大家分享4个有突破性新特性。</p>
+<a id="more"></a>
+<ul>
+<li>服务端渲染异步组件</li>
+<li>包裹组件内实现属性继承</li>
+<li>异步组件支持 webpack3</li>
+<li>组件渲染后可保留 HTML 注释</li>
+</ul>
+<h2 id="1-服务端渲染异步组件"><a href="#1-服务端渲染异步组件" class="headerlink" title="1. 服务端渲染异步组件"></a>1. 服务端渲染异步组件</h2><p>在 Vue2.4.0 以前版本，由于无法支持服务端渲染异步组件，导致他们通常在 SSR 中被忽略，只能等待在客户端渲染。新版本使异步组件有着突破性的进展，同时修复这问题可以让 Vue 更好的实现 PWAs。</p>
+<p>异步组件是非常方便的，简而言之，它能让你的应用代码分离，使非必要组件（比如模态，选项卡，折叠内容，其他页面等）在首页加载后延迟加载， 从而让用户更快的看到主页。</p>
+<p>假如你决定以异步方式加载内容，主组件可能如下所示：</p>
+<pre><code class="html">&lt;template&gt;
+  &lt;div id=&quot;app&quot;&gt;
+    &lt;!--Above-the-fold--&gt;
+    &lt;sync-component&gt;&lt;/sync-component&gt;
+
+    &lt;!--Below-the-fold--&gt;
+    &lt;async-component&gt;&lt;/async-component&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+&lt;script&gt;
+
+import SyncComponent from &#39;./SyncComponent.vue&#39;;
+const AsyncComponent = import(&#39;./AsyncComponent.vue&#39;);
+
+export default {
+  components: {
+    SyncComponent,
+    AsyncComponent
+  }
+}
+&lt;/script&gt;
+</code></pre>
+<p>通过使用 webpack 的动态 import 函数，可使异步组件将在服务端页面后，通过 ajax 请求被加载。不足就是，当加载中用户可能只能看到微调框或者是空白区域。</p>
+<p>这可以通过服务端渲染来改进，被标记的异步组件可以在初始页面内渲染，避免出现微调框或者空白区域，提高用户体验。</p>
+<p>Vue2.4.0 增加 <code>server-rendered</code> 属性使其变得可能。SSR中主组件输出如下:</p>
+<pre><code class="html">&lt;div id=&quot;app&quot; server-rendered=&quot;true&quot;&gt;
+  &lt;!--Above-the-fold--&gt;
+  &lt;div&gt;
+    Whatever sync-component renders as...
+  &lt;/div&gt;
+  &lt;!--Below-the-fold--&gt;
+&lt;/div&gt;
+</code></pre>
+<p>从 Vue2.4.0 开始，异步组件将被包含在 SSR 输出内容中，因此你有无白屏用户体验的进行VUE程序代码分离。</p>
+<h2 id="2-组件内新增实现属性继承"><a href="#2-组件内新增实现属性继承" class="headerlink" title="2. 组件内新增实现属性继承"></a>2. 组件内新增实现属性继承</h2><p>Vue 中一个比较令人烦恼的事情是属性只能从父组件传递给子组件。这也就意味着当你想向嵌套层级比较深组件数据传递，只能由父组件传递给子组件，子组件再传递给孙子组件…像下面这样:</p>
+<pre><code class="html">&lt;parent-component :passdown=&quot;passdown&quot;&gt;
+  &lt;child-component :passdown=&quot;passdown&quot;&gt;
+    &lt;grand-child-component :passdown=&quot;passdown&quot;&gt;
+      Finally, here&#39;s where we use {{ passdown }}!
+</code></pre>
+<p>demo 中只有一两个属性还好，试想一下，当在一个真实的项目中，你可能有非常非常多的属性需要传递时，那是怎样一种恐怖的场景。</p>
+<p>事件总线模式或者vuex也可以解决跨非直接父子组件通信的问题，但VUE2.4.0版本提供了一种新的解决方案。事实上，这个新功能是有两个独立却相关的部分组成，首先，组件支持inheritAttrs的选项，其次需用到实例属性$attrs。我们通过一个例子来看它是如何工作的。</p>
+<p>例子</p>
+<p>我们首先绑定两个属性在组件上，propa是组件自己需要使用的,而propb只是组件需要向下传递的一个属性</p>
+<pre><code class="html">&lt;my-component :propa=&quot;propa&quot; :propb=&quot;propb&quot;&gt;&lt;/my-component&gt;
+</code></pre>
+<p>在 Vue2.4.0 之前版本，组件内未被注册的属性将作为普通html元素属性被渲染。所以你组件可能定义起来像是这样:</p>
+<pre><code class="html">&lt;template&gt;
+  &lt;div&gt;{{ propa }}&lt;/div&gt;
+&lt;/template&gt;
+&lt;script&gt;
+export default {
+  props: [&#39;propa&#39;]
+}
+&lt;/script&gt;
+</code></pre>
+<p>它将渲染成下面的样子:</p>
+<pre><code class="html">&lt;div propb=&quot;propb&quot;&gt;propa&lt;/div&gt;
+</code></pre>
+<p><code>propb</code> 仅仅被渲染普通 html 属性，如果想让属性能够向下传递，即使 prop 组件没有被使用，你也需要在组件上注册。</p>
+<pre><code class="js">export default {
+  props: [ 
+    &#39;propa&#39;,
+    &#39;propb&#39; // 注册后才能向下传递 
+  ]
+}
+</code></pre>
+<p>这样做会使组件预期功能变得模糊不清，同时也难以维护组件的DRY。在Vue2.4.0,可以在组件定义中添加 <code>inheritAttrs：false</code> ，组件将不会把未被注册的propb呈现为普通的HTML属性。渲染效果如下：</p>
+<pre><code class="html">&lt;div&gt;propa&lt;/div&gt;
+</code></pre>
+<p>向下传递prop</p>
+<p>虽然prop在组件中没有出现，但通过组件实例的$attrs（也是Vue2.4.0新增功能）获取。组件的$attrs包含所有未被注册的props</p>
+<pre><code class="html">&lt;template&gt;
+  &lt;div&gt;
+  {{ propa }}
+  &lt;grand-child v-bind:propb=&quot;$attrs.propb&quot;&gt;&lt;/grand-child&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+&lt;script&gt;
+  export default {
+    props: [ &#39;propa&#39; ],
+    inheritAttrs: false
+  }
+&lt;/script&gt;
+</code></pre>
+<p>想象当你需要向多个嵌套层级中，传递上千百个属性时，这个特性使你的在每个中间组件属性定义变得相当简洁。</p>
+<pre><code class="html">&lt;input v-bind=&quot;$attrs&quot;&gt;
+</code></pre>
+<p>当然，也可以通过这种方式用v-on绑定事件监听传递函数</p>
+<pre><code class="html">&lt;div&gt;
+  &lt;input v-bind=&quot;$attrs&quot; v-on=&quot;$listeners&quot;&gt;
+&lt;/div&gt;
+</code></pre>
+<h2 id="3-异步组件支持webpack3"><a href="#3-异步组件支持webpack3" class="headerlink" title="3. 异步组件支持webpack3"></a>3. 异步组件支持webpack3</h2><p>作用域提升是最近发布的webpack3的关键功能之一。webpack 1和2是将模块打包到一个独立的函数作用域内。通过新的ES2015模块语法实现的范围提升方法在浏览器中的执行速度，比老的独立范围的方式要快的多。</p>
+<p>两个星期以前，vue-loaderv13.0.0发布了，并将.vue文件作为ES模块输出，这使得vue能够享受新的变量提升带来的便利。</p>
+<p>由于ES模块导出方式不同，在Vue项目中用于代码拆分的简洁的异步组件语法</p>
+<p>例如</p>
+<pre><code class="js">const Foo = () =&gt; import(&#39;./Foo.vue&#39;);
+// 将改为：
+const Foo = () =&gt; import(&#39;./Foo.vue&#39;).then(m =&gt; m.default);
+</code></pre>
+<p>然而在Vue2.4.0在处理异步组件时，将自动解析为ES模块默认导出，允许以前更简洁的语法。</p>
+<h2 id="4-保留HTML注释"><a href="#4-保留HTML注释" class="headerlink" title="4. 保留HTML注释"></a>4. 保留HTML注释</h2><p>好吧，这个功能看起来并不是那么的重要，然我仍然觉得很酷。在Vue2.4.0之前版本，注释将被省略</p>
+<pre><code class="html">&lt;template&gt;
+  &lt;div&gt;Hello &lt;!--I&#39;m a comment.--&gt;&lt;/div&gt;
+&lt;/template&gt;
+</code></pre>
+<p>渲染后：</p>
+<pre><code class="html">&lt;div&gt;Hello&lt;/div&gt;
+</code></pre>
+<p>问题是，有些注释需要被渲染在页面中，有些库可能需要这些注释。</p>
+<p>在Vue2.4.0，你可以使用comments选项开启注释</p>
+<pre><code class="html">&lt;template&gt;
+  &lt;div&gt;Hello &lt;!--I&#39;m a comment.--&gt;&lt;/div&gt;
+&lt;/template&gt;
+&lt;script&gt;
+export default {
+  comments: true
+}
+&lt;/script&gt;
+</code></pre>
+
+      </div>
+    </div>
+  </div>
+  
+  <!-- 打赏 -->
+  
+    <div class="donate">
+<div class="ui text center aligned container">
+  <div class="title">「真诚赞赏，手有余香」</div>
+  <div class="donate-img">
+    <img class="dii" src="/images/donate.png"/>
+    <div class="ui flowing popup top center transition hidden">
+      <img src="/images/wx-donate.png" width="128" height="128"/>
+    </div>
+  </div>
+</div>
+</div>
+  
+  
+  <!-- 文章标签 -->
+  
+<div class="article-tags">
+  <div class="ui text container">
+  	
+  	  
+  	  <a href="/tags/Vue" class="ui label">
+  	    <i class="icon angle tag"></i>Vue
+  	  </a>
+  	
+  </div>
+</div>
+
+  
+  <!-- 推荐阅读 -->
+  
+  <div class="articles-related">
+  	<div class="ui text container">
+    <div class="block-divider">
+	    <strong>推荐阅读</strong>
+	  <div class="ui divider"></div>
+	</div>
+	<div class="articles">
+	  <div class="ui items">
+	  	
+	  	  
+	  	    <div class="item">
+  
+  <div class="content">
+    <a href="/2017/09/28/how-todo-font/" class="header">如何成为一名卓越的前端工程师</a>
+    <div class="description">
+      <p>
+      	<p>看过之后非常有感触，很多观点都是自己长期非常坚持和认同的，所以翻译出来分享给更多的前端同学！</p>
+    	<a href="/2017/09/28/how-todo-font/" class="readall">查看全文<i class="angle double right icon"></i></a></p>
+    </div>
+    <div class="extra">
+      <span>
+        <span class="author">gongph</span>
+        <span class="bull"></span>
+        <span class="date" data-tooltip="Thursday, September 28th 2017, 16:01:00"  
+      	data-inverted="" data-position="bottom center">2017-09-28</span>
+      </span>
+    </div>
+  </div>
+</div>
+	  	  
+	    
+	  	  
+	  	    <div class="item">
+  
+  <div class="content">
+    <a href="/2017/08/27/mobile-h5-first-screen/" class="header">移动 H5 首屏秒开优化方案探讨</a>
+    <div class="description">
+      <p>
+      	<p>随着移动设备性能不断增强，web 页面的性能体验逐渐变得可以接受，又因为 web 开发模式的诸多好处(跨平台，动态更新，减体积，无限扩展)，APP 客户端里出现越来越多内嵌 web 页面（为了配上当前流行的说法，以下把所有网页都称为 H5 页面，虽然可能跟 H5 没关系），很多 APP 把一些功能模块改成用 H5 实现。</p>
+    	<a href="/2017/08/27/mobile-h5-first-screen/" class="readall">查看全文<i class="angle double right icon"></i></a></p>
+    </div>
+    <div class="extra">
+      <span>
+        <span class="author">gongph</span>
+        <span class="bull"></span>
+        <span class="date" data-tooltip="Sunday, August 27th 2017, 09:21:00"  
+      	data-inverted="" data-position="bottom center">2017-08-27</span>
+      </span>
+    </div>
+  </div>
+</div>
+	  	  
+	    
+	  	  
+	    
+	  </div>
+	</div>
+	</div>
+ </div>
+
+    </section>
+    
+    <!-- footer -->
+    <footer class="footers">
+	<div class="ui footer">
+	  <div class="ui text center aligned container">
+	    <div class="copyright">© 2016 -
+	      <span class="copyright-year">2017</span>
+	      <i class="github icon"></i> Gongph
+	    </div>
+	    <p>
+      	<span class="powered-by">由 
+      	  <a href="https://hexo.io">Hexo</a> 强力驱动 
+      	</span>
+      	<span class="bull"> | </span>
+      	<span class="theme-info">主题 - 
+      	  <a href="#" class="them-link">Vae . Virgo</a>
+      	</span>
+      </p>
+	  </div>
+	</div>
+</footer>
+    <!-- after footer some third scripts -->
+    <script src="/lib/jquery/jquery.min.js"></script>
+<script src="/lib/semantic/semantic.min.js"></script>
+<script src="/lib/headroom/headroom.min.js"></script>
+<script src="/lib/highlight/js/highlight.min.js"></script>
+<script>
+  // code highlight
+  hljs.initHighlightingOnLoad();
+  // headroom config
+  var header = new Headroom(document.querySelector("#header"), {
+    tolerance: 5,
+    offset : 10,
+    classes: {
+      initial: "animated",
+      pinned: "slideDown",
+      unpinned: "slideUp"
+    }
+  });
+  header.init();
+  
+  
+    $('.dii').popup({
+	  hoverable: true,
+	  position: 'top center'
+    });
+  
+</script>
+  </body>
+</html>
