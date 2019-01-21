@@ -12,6 +12,6 @@ git config user.email 'gongph@foxmail.com'
 git add -A
 git commit -m 'deploy'
 
-git push -f https://github.com/gongph/element-code-learning.git master:gh-pages
+git push -f https://github.com/gongph/gongph.github.io.git master:gh-pages
 
 cd -
