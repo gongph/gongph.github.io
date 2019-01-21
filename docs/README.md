@@ -15,7 +15,7 @@ sidebar: false
 - 龚朋辉/男/1991-08-06
 - 本科/北京经济技术研修学院
 - 工作年限：5+年
-- 技术博客：[https://juejin.im/user/57beefb6efa631005a9edd7c](https://juejin.im/user/57beefb6efa631005a9edd7c)
+- 技术博客：[https://juejin.im](https://0x9.me/Jyxqe)
 - Github: [https://github.com/gongph](https://github.com/gongph)
 - 期望职位： Web前端高级工程师、应用架构师
 - 期望薪资： 税前月薪 20k ~ 25K
